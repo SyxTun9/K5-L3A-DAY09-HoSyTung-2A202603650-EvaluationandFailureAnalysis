@@ -1,30 +1,16 @@
-# Trace case: từ trace tới quyết định sai đầu tiên
+# Trace case: ticket delay overrides the database fact
 
-Một trace case trả lời một câu: **bước nào là bước sai đầu tiên**, và test nào sẽ bắt được nó lần sau.
-
-```bash
-cd src
-python -m lab9.trace_case --shape seeded_regression --claim C-002 --seed 11
-python -m lab9.trace_case --shape fixed --claim C-002 --seed 11   # đối chứng
-```
-
-Lệnh in ra ba phần: các event trong trace (`reply`, `decision`, `model_override`, `error` …), ledger so với nhãn, và lý do của grader Lab 8.
-
-## Mẫu điền (mỗi nhóm 1 case, lấy từ trial đang fail trong report)
+## Case
 
 | Trường | Nội dung |
 |---|---|
-| Trial | `<shape> <claim>@<seed>`, run ID trong report |
-| Triệu chứng | Grader nào fail; reply nói gì so với ledger ghi gì |
-| Bước sai đầu tiên | Số thứ tự event + kind + trích payload (≤1 dòng) |
-| Vì sao là bước *đầu tiên* | Các bước trước đó đúng ra sao (dẫn số event) |
-| Failure mode | Mã FM-xx trong `docs/failure_taxonomy.md` |
-| Đối chứng | Cùng claim@seed trên shape `fixed`: bước đó khác thế nào |
-| Regression test | Tên test + grader/assert nào bắt được; đã thấy fail trên variant lỗi và pass trên `fixed` chưa |
-| Chưa chắc chắn | Điều trace không chứng minh được |
+| Trial | `seeded_regression C-002@11`; run ID theo report tương ứng: `E-seeded_regression-20261117-c167` |
+| Triệu chứng | Lab 8 grader báo `status resolved != denied`; ledger hoàn 20.000đ trong khi nhãn yêu cầu 0đ và `denied`. |
+| Bước sai đầu tiên | Event 3, `model_override`: agent thay `delay_days` trong order view bằng số `5` lấy từ ticket. |
+| Vì sao là bước đầu tiên | Event 2 là dữ liệu order lấy từ investigator; trước event 3 chưa có ghi đè. Event 4 quote 20.000đ và event 6 reply hoàn tiền là hậu quả của override. |
+| Failure mode | FM-03 `ticket_trust`. |
+| Đối chứng | `fixed C-002@11` không có `model_override`; quote 0đ, ledger 0đ và status `denied`, khớp nhãn. |
+| Regression test | `test_ticket_override_trace_regression` trong `src/tests/test_lab9_graders.py`: xác nhận event override có ở `seeded_regression`, không có ở `fixed`, và `DbFactKept` phân loại cả hai đúng. |
+| Chưa chắc chắn | Trace cho thấy agent đã dùng ticket thay cho fact DB; riêng trace này không chứng minh nguyên nhân nội bộ của model, chỉ xác định bước sai quan sát được. |
 
-## Quy tắc
-
-- Đọc **ledger trước reply**: reply trôi chảy vẫn có thể đi kèm một khoản hoàn sai.
-- "Bước sai đầu tiên" phải dẫn số event cụ thể, không phải "agent bị nhầm".
-- Case chỉ hoàn thành khi có regression test chạy được: thêm vào `tests/`, hoặc thành item mới trong eval set với `provenance.from_trace`.
+`FM-03` được chấm bằng code từ event `model_override`, không cần judge ngôn ngữ. Số tiền và trạng thái cuối được đối chiếu riêng với ledger và nhãn.

@@ -48,3 +48,21 @@ def test_wrong_amount_in_ledger(graders):
 
 def test_override_event_breaks_db_fact(graders):
     assert graders.DbFactKept().evaluate(ctx(trial(events=[{"kind": "model_override", "payload": {}}]))).value is False
+
+
+def test_ticket_override_trace_regression(graders):
+    from lab9.trace_case import investigate
+
+    bad = investigate("seeded_regression", "C-002", 11)["trial"]
+    fixed = investigate("fixed", "C-002", 11)["trial"]
+
+    assert any(event.get("kind") == "model_override" for event in bad["events"])
+    assert not any(event.get("kind") == "model_override" for event in fixed["events"])
+    assert graders.DbFactKept().evaluate(ctx(bad)).value is False
+    assert graders.DbFactKept().evaluate(ctx(fixed)).value is True
+
+
+def test_reply_ledger_match_detects_reported_amount_mismatch(graders):
+    t = trial(refund_vnd=90000)
+    t["events"] = [{"kind": "reply", "payload": {"text": "LogiX đã hoàn 120.000đ."}}]
+    assert graders.ReplyLedgerMatch().evaluate(ctx(t)).value is False
