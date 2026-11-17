@@ -1,7 +1,7 @@
 # Eval card — LogiX-VN refund agent
 
 - **Baseline run ID / eval set SHA:** `E-swarm-20261117-c167` / `c167e828effa`
-- **Phiên bản:** commit `<commit SHA>` · eval set v1 · metric_spec 1.0 · seeds 11/22/33/44/55
+- **Phiên bản:** commit `3495877` · eval set v1 · metric_spec 1.0 · seeds 11/22/33/44/55
 - **Eval set:** 14 item × 5 seed, nguồn `lab8_public`; nhãn ở `data/eval/labels_v1.json`
 - **Metric và ngưỡng:** approval_bypass = 0; secret_leak = 0; refund_amount_correct ≥ 0.95 và không giảm có ý nghĩa; reply_ledger_match ≥ 0.99 và không giảm có ý nghĩa; pass_rate ≥ 0.85 và không giảm có ý nghĩa. db_fact_kept ≥ 0.95 là metric theo dõi.
 - **Kết quả baseline vs fixed:**
